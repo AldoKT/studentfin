@@ -1331,7 +1331,7 @@
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: var(--radius-lg);
-      padding: 22px;
+      padding: 20px;
       position: relative;
       overflow: hidden;
       margin-bottom: 20px;
@@ -1377,12 +1377,34 @@
       color: var(--danger);
     }
 
+    .insight-summary-block {
+      display: grid;
+      grid-template-columns: 130px minmax(0, 1fr);
+      column-gap: 16px;
+      row-gap: 4px;
+      max-width: 760px;
+      margin: 12px 0 14px;
+    }
+
+    .insight-summary-label {
+      color: var(--primary);
+      font-family: 'Geist', sans-serif;
+      font-size: 10.5px;
+      font-weight: 700;
+      letter-spacing: .06em;
+      padding-top: 2px;
+    }
+
     .insight-sub {
       font-size: 13.5px;
       color: var(--text-muted);
       max-width: 520px;
       line-height: 1.6;
       margin-bottom: 14px;
+    }
+
+    #page-insight .insight-summary-block .insight-sub {
+      margin-bottom: 0;
     }
 
     .insight-badges {
@@ -1412,6 +1434,21 @@
     .badge.green {
       background: var(--success-bg);
       color: var(--success);
+    }
+
+    .insight-donut-total {
+      font-size: 9px;
+      font-weight: 700;
+      line-height: 1.15;
+      text-align: center;
+    }
+
+    #page-insight .dash-grid,
+    #page-insight .dash-grid>*,
+    #page-insight .dash-grid .card,
+    #page-insight .insight-smart-action,
+    #page-insight #donut-legend {
+      min-width: 0;
     }
 
     .insight-smart-action {
@@ -3697,6 +3734,15 @@
         gap: 12px;
       }
 
+      .insight-summary-block {
+        grid-template-columns: 1fr;
+        row-gap: 2px;
+      }
+
+      .insight-summary-label:not(:first-child) {
+        margin-top: 8px;
+      }
+
       .accounts-top {
         grid-template-columns: 1fr;
         gap: 12px;
@@ -4214,26 +4260,32 @@
             </div>
             <div
               style="padding:8px 14px;border:1.5px solid var(--border);border-radius:8px;font-family:'Geist',sans-serif;font-size:12.5px;font-weight:700;color:var(--text-muted);">
-              6 Bulan Terakhir</div>
+              7 Hari Terakhir</div>
           </div>
           <div class="insight-hero">
             <div class="insight-hero-blob"></div>
-            <div class="insight-tag"><i class="ti ti-brain"></i>ANALISIS PERILAKU FINANSIAL</div>
-            <div class="insight-headline">Pengeluaran weekendmu <span class="red">40% lebih tinggi</span><br />dibanding
-              hari kerja, terutama Makan & Minum.</div>
-            <div class="insight-sub">Pertimbangkan anggaran khusus weekend. Tingkat tabunganmu 15%—solid, tapi optimasi
-              weekend bisa membawamu ke target 20%.</div>
+            <div class="insight-tag"><i class="ti ti-chart-dots-3"></i>INSIGHT KEUANGAN</div>
+            <div class="insight-headline">Pola pengeluaranmu, diringkas dari transaksi yang tercatat.</div>
+            <div class="insight-summary-block">
+              <div class="insight-summary-label">PENGAMATAN</div>
+              <div class="insight-sub" id="insight-observation">Menganalisis kategori pengeluaran terbesar...</div>
+              <div class="insight-summary-label">MENGAPA INI PENTING</div>
+              <div class="insight-sub" id="insight-why">Menganalisis dampak pola pengeluaran...</div>
+              <div class="insight-summary-label">LANGKAH</div>
+              <div class="insight-sub" id="insight-action">Menyiapkan rekomendasi pengeluaran...</div>
+            </div>
             <div class="insight-badges">
-              <div class="badge primary"><i class="ti ti-trending-up" style="font-size:12px;"></i>Pengeluaran Weekend
-              </div>
-              <div class="badge green"><i class="ti ti-leaf" style="font-size:12px;"></i>15% Saving Rate</div>
+              <div class="badge primary" id="insight-weekend-badge"><i class="ti ti-calendar-week"
+                  style="font-size:12px;"></i>Pengeluaran akhir pekan</div>
+              <div class="badge green" id="insight-saving-badge"><i class="ti ti-leaf"
+                  style="font-size:12px;"></i>Tingkat Tabungan</div>
             </div>
           </div>
           <div class="dash-grid" style="margin-bottom:20px;">
             <div class="card">
               <div
                 style="font-family:'Geist',sans-serif;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-muted);margin-bottom:14px;">
-                TREN PEMASUKAN VS PENGELUARAN</div>
+                TREN PEMASUKAN VS PENGELUARAN · 7 HARI TERAKHIR</div>
               <div style="height:190px;position:relative;"><canvas id="incomeExpenseChart"></canvas></div>
               <div style="display:flex;gap:16px;justify-content:center;margin-top:10px;">
                 <div
@@ -4257,7 +4309,7 @@
                     <div
                       style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;">
                       <div style="font-size:9px;color:var(--text-muted);">Total</div>
-                      <div style="font-size:12px;font-weight:700;" id="donut-center">Rp 0</div>
+                      <div class="insight-donut-total" id="donut-center">Rp 0</div>
                     </div>
                   </div>
                   <div id="donut-legend" style="flex:1;display:flex;flex-direction:column;gap:5px;"></div>
@@ -4266,9 +4318,9 @@
               <div class="insight-smart-action">
                 <div class="blob2"></div>
                 <div class="action-icon"><i class="ti ti-sparkles"></i></div>
-                <div class="action-title">Smart Action</div>
-                <div class="action-body" id="smart-action-text">Alihkan Rp 500.000 dari 'Nongkrong' ke tabungan bulan
-                  ini untuk mempercepat pencapaian target finansialmu.</div>
+                <div class="action-title">Rekomendasi Pengeluaran</div>
+                <div class="action-body" id="smart-action-text">Menyiapkan rekomendasi berdasarkan transaksi yang
+                  tercatat.</div>
                 <button class="action-btn" onclick="showToast('Saran diterapkan ke budget!','ti-circle-check')">Terapkan
                   Saran</button>
               </div>
@@ -4280,8 +4332,7 @@
                 <div
                   style="font-family:'Geist',sans-serif;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-muted);">
                   POLA PENGELUARAN</div>
-                <div style="font-size:12.5px;color:var(--text-muted);margin-top:3px;">Frekuensi transaksi per hari &
-                  waktu</div>
+                <div style="font-size:12.5px;color:var(--text-muted);margin-top:3px;">Frekuensi transaksi per hari</div>
               </div>
               <div style="display:flex;align-items:center;gap:6px;">
                 <span style="font-size:10.5px;color:var(--text-faint);">Sedikit</span>

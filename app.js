@@ -1107,17 +1107,68 @@ const PREV_REPORTS = [
 let incExpChartInst = null, donutChartInst = null;
 
 function renderInsight() {
+  renderInsightSummary();
   renderIncomeExpenseChart();
   renderDonutChart();
   renderHeatmap();
 }
 
+function getInsightAnalysis() {
+  const expenses = state.transactions.filter(t => t.type === "expense");
+  const totalSpent = expenses.reduce((sum, t) => sum + Math.abs(t.amount), 0);
+  const totalIncome = getTotalIncome();
+  const spentByCategory = getSpentByCategory();
+  const largestCategory = CATEGORIES
+    .map(category => ({ ...category, amount: spentByCategory[category.id] || 0 }))
+    .sort((a, b) => b.amount - a.amount)[0];
+  const weekendSpent = expenses
+    .filter(t => [0, 6].includes(t.date.getDay()))
+    .reduce((sum, t) => sum + Math.abs(t.amount), 0);
+  const weekdaySpent = totalSpent - weekendSpent;
+  const savingRate = totalIncome > 0 ? Math.round(((totalIncome - totalSpent) / totalIncome) * 100) : 0;
+  const categoryShare = totalSpent > 0 ? Math.round((largestCategory.amount / totalSpent) * 100) : 0;
+  const weekendShare = totalSpent > 0 ? Math.round((weekendSpent / totalSpent) * 100) : 0;
+
+  return { totalSpent, totalIncome, largestCategory, categoryShare, weekendSpent, weekdaySpent, weekendShare, savingRate };
+}
+
+function renderInsightSummary() {
+  const analysis = getInsightAnalysis();
+  const category = analysis.largestCategory;
+  const observation = document.getElementById("insight-observation");
+  const why = document.getElementById("insight-why");
+  const action = document.getElementById("insight-action");
+  const weekendBadge = document.getElementById("insight-weekend-badge");
+  const savingBadge = document.getElementById("insight-saving-badge");
+  const smartAction = document.getElementById("smart-action-text");
+
+  if (!category || category.amount === 0) {
+    observation.textContent = "Belum ada pengeluaran untuk dianalisis.";
+    why.textContent = "Tambahkan transaksi agar pola pengeluaranmu dapat terlihat.";
+    action.textContent = "Catat transaksi pertama untuk mendapatkan rekomendasi yang relevan.";
+    smartAction.textContent = action.textContent;
+    return;
+  }
+
+  observation.textContent = `${category.name} menjadi kategori pengeluaran terbesar dengan ${rupiah(category.amount)} (${analysis.categoryShare}% dari total pengeluaran).`;
+  why.textContent = `Kategori ini menyumbang porsi terbesar dari ${rupiah(analysis.totalSpent)} pengeluaran yang tercatat.`;
+  action.textContent = `Tetapkan batas pengeluaran ${category.name.toLowerCase()} sebelum menambah transaksi berikutnya.`;
+  weekendBadge.innerHTML = `<i class="ti ti-calendar-week" style="font-size:12px;"></i>${analysis.weekendShare}% dari total pengeluaran terjadi di akhir pekan`;
+  savingBadge.innerHTML = `<i class="ti ti-leaf" style="font-size:12px;"></i>${analysis.savingRate}% Tingkat Tabungan`;
+  smartAction.textContent = action.textContent;
+}
+
 function renderIncomeExpenseChart() {
   const ctx = document.getElementById("incomeExpenseChart");
   if (!ctx) return;
-  const months = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun"];
-  const incomes = [2500000, 2500000, 3000000, 2500000, 2500000, 2500000];
-  const expenses = [1800000, 2100000, 2400000, 1950000, 2200000, getTotalSpent()];
+  const dates = Array.from({ length: 7 }, (_, index) => daysAgo(6 - index));
+  const months = dates.map(fmtDate);
+  const incomes = dates.map(date => state.transactions
+    .filter(t => t.type === "income" && t.date.toDateString() === date.toDateString())
+    .reduce((sum, t) => sum + t.amount, 0));
+  const expenses = dates.map(date => state.transactions
+    .filter(t => t.type === "expense" && t.date.toDateString() === date.toDateString())
+    .reduce((sum, t) => sum + Math.abs(t.amount), 0));
   const { grid, tick } = getChartColors();
   if (incExpChartInst) incExpChartInst.destroy();
   incExpChartInst = new Chart(ctx, {
@@ -1125,15 +1176,16 @@ function renderIncomeExpenseChart() {
     data: {
       labels: months,
       datasets: [
-        { label: "Pemasukan", data: incomes, borderColor: "#4ADE80", backgroundColor: "rgba(74,222,128,0.1)", borderWidth: 2.5, fill: true, tension: 0.35, pointRadius: 3 },
-        { label: "Pengeluaran", data: expenses, borderColor: "#7B6EFF", backgroundColor: "rgba(123,110,255,0.1)", borderWidth: 2.5, fill: true, tension: 0.35, pointRadius: 3 },
+        { label: "Pemasukan", data: incomes, yAxisID: "income", borderColor: "#4ADE80", backgroundColor: "rgba(74,222,128,0.1)", borderWidth: 2.5, fill: true, tension: 0.35, pointRadius: 3 },
+        { label: "Pengeluaran", data: expenses, yAxisID: "expense", borderColor: "#7B6EFF", backgroundColor: "rgba(123,110,255,0.1)", borderWidth: 2.5, fill: true, tension: 0.35, pointRadius: 3 },
       ],
     },
     options: {
       responsive: true, maintainAspectRatio: false,
       plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => c.dataset.label + ": " + rupiah(c.parsed.y) } } },
       scales: {
-        y: { ticks: { callback: v => rupiahShort(v), font: { size: 10 }, color: tick }, grid: { color: grid } },
+        income: { position: "left", title: { display: true, text: "Pemasukan", color: "#4ADE80", font: { size: 10, weight: "600" } }, ticks: { callback: v => rupiah(v), font: { size: 9 }, color: tick }, grid: { color: grid } },
+        expense: { position: "right", title: { display: true, text: "Pengeluaran", color: "#7B6EFF", font: { size: 10, weight: "600" } }, ticks: { callback: v => rupiah(v), font: { size: 9 }, color: tick }, grid: { drawOnChartArea: false } },
         x: { grid: { display: false }, ticks: { font: { size: 11 }, color: tick } },
       },
     },
@@ -1144,9 +1196,14 @@ function renderDonutChart() {
   const ctx = document.getElementById("donutChart");
   if (!ctx) return;
   const spent = getSpentByCategory();
-  const data = CATEGORIES.filter(c => spent[c.id] > 0).map(c => ({ name: c.name, val: spent[c.id], color: c.color }));
+  const categories = CATEGORIES.filter(c => spent[c.id] > 0);
+  const visible = categories.slice(0, 4).map(c => ({ name: c.name, val: spent[c.id], color: c.color }));
+  const remaining = categories.slice(4).reduce((sum, c) => sum + spent[c.id], 0);
+  const data = remaining > 0
+    ? [...visible, { name: "Lainnya", val: remaining, color: "#5F5E5A" }]
+    : visible;
   const total = data.reduce((s, d) => s + d.val, 0);
-  document.getElementById("donut-center").textContent = rupiahShort(total);
+  document.getElementById("donut-center").textContent = rupiah(total);
   if (donutChartInst) donutChartInst.destroy();
   donutChartInst = new Chart(ctx, {
     type: "doughnut",
@@ -1161,8 +1218,10 @@ function renderDonutChart() {
   });
   const legend = document.getElementById("donut-legend");
   legend.innerHTML = "";
-  data.slice(0, 4).forEach(d => {
-    const pct = Math.round((d.val / total) * 100);
+  let displayedPct = 0;
+  data.forEach((d, index) => {
+    const pct = index === data.length - 1 ? 100 - displayedPct : Math.round((d.val / total) * 100);
+    displayedPct += pct;
     const row = document.createElement("div");
     row.style.cssText = "display:flex;align-items:center;gap:7px;font-size:12px;";
     row.innerHTML = `<div style="width:9px;height:9px;border-radius:9999px;background:${d.color};flex-shrink:0;"></div><div style="flex:1;color:var(--text);font-family:'Geist',sans-serif;font-weight:700;">${d.name}</div><div style="color:var(--text-muted);">${pct}%</div>`;
@@ -1173,12 +1232,10 @@ function renderDonutChart() {
 function renderHeatmap() {
   const grid = document.getElementById("heatmap-grid");
   if (!grid) return;
-  const times = ["Pagi (6-12)", "Siang (12-14)", "Sore (14-18)", "Malam (18-21)", "Larut (21-00)", "Dini (00-6)"];
   const days = ["Sen", "Sel", "Rab", "Kam", "Jum", "Sab", "Min"];
-  const data = [
-    [1, 3, 1, 2, 0, 0], [2, 2, 1, 1, 0, 0], [1, 3, 2, 2, 0, 0],
-    [1, 2, 1, 3, 1, 0], [2, 3, 2, 4, 3, 1], [1, 4, 3, 4, 4, 2], [1, 3, 3, 3, 2, 1],
-  ];
+  const dayIndexes = [1, 2, 3, 4, 5, 6, 0];
+  const data = dayIndexes.map(day => state.transactions.filter(t => t.date.getDay() === day).length);
+  const maxCount = Math.max(...data, 1);
   grid.innerHTML = "";
   grid.appendChild(document.createElement("div"));
   days.forEach(d => {
@@ -1186,15 +1243,15 @@ function renderHeatmap() {
     h.className = "heatmap-col-header"; h.textContent = d;
     grid.appendChild(h);
   });
-  times.forEach((t, ti) => {
-    const lbl = document.createElement("div");
-    lbl.className = "heatmap-label"; lbl.textContent = t;
-    grid.appendChild(lbl);
-    days.forEach((_, di) => {
-      const cell = document.createElement("div");
-      cell.className = "hm-cell hm-" + data[di][ti];
-      grid.appendChild(cell);
-    });
+  const label = document.createElement("div");
+  label.className = "heatmap-label";
+  label.textContent = "Transaksi";
+  grid.appendChild(label);
+  data.forEach(count => {
+    const cell = document.createElement("div");
+    cell.className = "hm-cell hm-" + Math.min(Math.ceil((count / maxCount) * 4), 4);
+    cell.title = `${count} transaksi`;
+    grid.appendChild(cell);
   });
 }
 
