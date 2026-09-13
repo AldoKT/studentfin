@@ -1539,6 +1539,13 @@
       gap: 20px;
     }
 
+    .goals-grid > *,
+    .goal-card,
+    .forecasting-card,
+    .liquidity-card {
+      min-width: 0;
+    }
+
     .goal-card {
       background: var(--surface);
       border: 1px solid var(--border);
@@ -1615,6 +1622,32 @@
       letter-spacing: .05em;
       color: var(--text-muted);
       margin-bottom: 14px;
+    }
+
+    .forecast-legend {
+      display: flex;
+      gap: 14px;
+      align-items: center;
+      color: var(--text-muted);
+      font-size: 11.5px;
+      margin-top: 8px;
+    }
+
+    .forecast-legend span {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .forecast-legend-line {
+      width: 18px;
+      height: 0;
+      border-top: 2px solid #7B6EFF;
+    }
+
+    .forecast-legend-line.projected {
+      border-top-color: #4ADE80;
+      border-top-style: dashed;
     }
 
     .forecast-info {
@@ -4282,10 +4315,14 @@
               <div class="forecasting-card">
                 <div class="forecast-label">PERKIRAAN PENCAPAIAN</div>
                 <div style="height:150px;position:relative;"><canvas id="forecastChart"></canvas></div>
+                <div class="forecast-legend" aria-label="Legenda grafik">
+                  <span><i class="forecast-legend-line actual"></i>Aktual</span>
+                  <span><i class="forecast-legend-line projected"></i>Proyeksi</span>
+                </div>
                 <div class="forecast-info">
-                  Berdasarkan tabungan <strong>Rp 2,5jt/bulan</strong>, kamu akan mencapai target pada:
+                  Jika kamu konsisten menabung <strong id="forecast-pace">Rp 2.500.000/bulan</strong>, target diperkirakan tercapai pada:
                   <div class="forecast-date"><i class="ti ti-calendar-check" style="font-size:19px;"></i><span
-                      id="forecast-date">April 2025</span></div>
+                      id="forecast-date">Desember 2026</span></div>
                 </div>
               </div>
               <div class="liquidity-card">

@@ -1084,9 +1084,11 @@ const ACCOUNTS_DATA = [
 
 const SAVINGS_GOALS = [
   { id: "laptop", name: "Upgrade Laptop", icon: "ti-device-laptop", color: "#3525CD", bg: "rgba(79,70,229,0.15)", saved: 12500000, target: 18000000, status: "on-track", statusText: "Sesuai jadwal — target Januari" },
-  { id: "emergency", name: "Dana Darurat", icon: "ti-shield-check", color: "#006C49", bg: "rgba(108,248,187,0.2)", saved: 4200000, target: 10000000, status: "on-track", statusText: "Proyeksi selesai: Maret 2025" },
+  { id: "emergency", name: "Dana Darurat", icon: "ti-shield-check", color: "#006C49", bg: "rgba(108,248,187,0.2)", saved: 4200000, target: 10000000, status: "on-track", statusText: "" },
   { id: "trip", name: "Liburan Semarang", icon: "ti-map-pin", color: "#684000", bg: "rgba(136,85,0,0.15)", saved: 850000, target: 3500000, status: "behind", statusText: "Sedikit di belakang jadwal" },
 ];
+
+const SAVINGS_MONTHLY_PACE = 2500000;
 
 const AI_INSIGHTS = [
   { title: "Pengeluaran Makan Tinggi", body: "Pengeluaranmu untuk makan naik 15% bulan ini. Pertimbangkan masak sendiri untuk hemat Rp 400rb/bulan.", accent: "var(--danger)" },
@@ -1201,6 +1203,25 @@ function renderHeatmap() {
 ============================================================ */
 let forecastChartInst = null;
 
+function getSavingsForecastDate(goal, monthlyPace = SAVINGS_MONTHLY_PACE) {
+  const remaining = Math.max(goal.target - goal.saved, 0);
+  const months = monthlyPace > 0 ? Math.ceil(remaining / monthlyPace) : 0;
+  const forecastDate = new Date();
+  forecastDate.setDate(1);
+  forecastDate.setMonth(forecastDate.getMonth() + months);
+  return forecastDate;
+}
+
+function formatSavingsMonth(date) {
+  const months = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+  return `${months[date.getMonth()]} ${date.getFullYear()}`;
+}
+
+function getSavingsGoalStatusText(goal) {
+  if (goal.status === "behind") return goal.statusText;
+  return `Proyeksi selesai: ${formatSavingsMonth(getSavingsForecastDate(goal))}`;
+}
+
 function renderSavings() {
   const list = document.getElementById("goals-list");
   list.innerHTML = "";
@@ -1222,7 +1243,7 @@ function renderSavings() {
           <div class="goal-icon" style="background:${g.bg};color:${g.color};"><i class="ti ${g.icon}"></i></div>
           <div>
             <div class="goal-name">${g.name}</div>
-            <div class="goal-status" style="color:${statusColor};"><i class="ti ${statusIcon}" style="font-size:11px;"></i>${g.statusText}</div>
+            <div class="goal-status" style="color:${statusColor};"><i class="ti ${statusIcon}" style="font-size:11px;"></i>${getSavingsGoalStatusText(g)}</div>
           </div>
         </div>
         <button style="color:var(--text-faint);font-size:17px;" aria-label="Opsi target" onclick="showToast('Edit target belum tersedia','ti-info-circle')"><i class="ti ti-dots-vertical"></i></button>
@@ -1230,13 +1251,12 @@ function renderSavings() {
       <div>
         <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:7px;">
           <div>
-            <span style="font-size:15px;font-weight:700;color:var(--text-muted);">Rp</span>
-            <span style="font-size:24px;font-weight:700;">${(g.saved / 1000000).toFixed(1).replace(".", ",")}jt</span>
+            <span style="font-size:24px;font-weight:700;">${rupiah(g.saved)}</span>
           </div>
           <div style="font-size:13px;color:var(--text-muted);">dari ${rupiah(g.target)}</div>
         </div>
         <div class="goal-progress-bar"><div class="goal-progress-fill" style="width:${pct}%;background:${progressColor};"></div></div>
-        <div class="goal-pct-row"><span style="color:${pctColor};">${pct}% Selesai</span><span style="color:var(--text-muted);">${rupiahShort(g.target - g.saved)} tersisa</span></div>
+        <div class="goal-pct-row"><span style="color:${pctColor};">${pct}% Selesai</span><span style="color:var(--text-muted);">${rupiah(g.target - g.saved)} tersisa</span></div>
       </div>`;
     list.appendChild(card);
   });
@@ -1248,24 +1268,36 @@ function renderForecastChart() {
   const ctx = document.getElementById("forecastChart");
   if (!ctx) return;
   const { grid, tick } = getChartColors();
-  const months = ["Sep", "Okt", "Nov", "Des", "Jan"];
-  const actual = [10000000, 12000000, 13500000, null, null];
-  const projected = [null, null, 13500000, 16000000, 18000000];
+  const goal = SAVINGS_GOALS.find(g => g.id === "laptop") || SAVINGS_GOALS[0];
+  const monthsToTarget = Math.max(Math.ceil(Math.max(goal.target - goal.saved, 0) / SAVINGS_MONTHLY_PACE), 0);
+  const chartMonths = Math.max(monthsToTarget, 1);
+  const chartDates = Array.from({ length: chartMonths + 1 }, (_, index) => {
+    const date = new Date();
+    date.setDate(1);
+    date.setMonth(date.getMonth() + index);
+    return date;
+  });
+  const months = chartDates.map(formatSavingsMonth);
+  const actual = [goal.saved, ...Array(chartMonths).fill(null)];
+  const projected = chartDates.map((_, index) => Math.min(goal.saved + index * SAVINGS_MONTHLY_PACE, goal.target));
+  const forecastDate = getSavingsForecastDate(goal);
+  document.getElementById("forecast-pace").textContent = rupiah(SAVINGS_MONTHLY_PACE) + "/bulan";
+  document.getElementById("forecast-date").textContent = formatSavingsMonth(forecastDate);
   if (forecastChartInst) forecastChartInst.destroy();
   forecastChartInst = new Chart(ctx, {
     type: "line",
     data: {
       labels: months,
       datasets: [
-        { label: "Aktual", data: actual, borderColor: "var(--success)", borderWidth: 2.5, pointRadius: [3, 3, 4, 0, 0], tension: 0.3, spanGaps: false },
-        { label: "Proyeksi", data: projected, borderColor: "var(--text-faint)", borderWidth: 2, borderDash: [5, 4], pointRadius: [0, 0, 4, 3, 3], tension: 0.3, spanGaps: false },
+        { label: "Aktual", data: actual, borderColor: "#7B6EFF", backgroundColor: "rgba(123,110,255,0.08)", borderWidth: 2.5, pointRadius: [4, ...Array(chartMonths).fill(0)], pointBackgroundColor: "#7B6EFF", tension: 0.3, spanGaps: false },
+        { label: "Proyeksi", data: projected, borderColor: "#4ADE80", backgroundColor: "rgba(74,222,128,0.08)", borderWidth: 2.5, borderDash: [6, 4], pointRadius: 4, pointBackgroundColor: "#4ADE80", tension: 0.3, spanGaps: false },
       ],
     },
     options: {
       responsive: true, maintainAspectRatio: false,
       plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => c.dataset.label + ": " + rupiah(c.parsed.y) } } },
       scales: {
-        y: { ticks: { callback: v => rupiahShort(v), font: { size: 10 }, color: tick }, grid: { color: grid } },
+        y: { ticks: { callback: v => rupiah(v), font: { size: 10 }, color: tick }, grid: { color: grid } },
         x: { grid: { display: false }, ticks: { font: { size: 11 }, color: tick } },
       },
     },
