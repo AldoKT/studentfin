@@ -1743,6 +1743,10 @@
       margin-bottom: 20px;
     }
 
+    #page-accounts .accounts-top > * {
+      min-width: 0;
+    }
+
     .dist-row {
       display: flex;
       justify-content: space-between;
@@ -4394,16 +4398,16 @@
           <div class="page-header">
             <div>
               <h1>Akun</h1>
-              <div class="sub">Kelola institusi dan dompet yang terhubung.</div>
+              <div class="sub">Kelola saldo akun dengan data sinkronisasi simulasi.</div>
             </div>
             <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
               <div class="auto-sync-indicator" id="auto-sync-status">
                 <span class="sync-dot"></span>
-                <span class="sync-label">Auto-sync aktif</span>
+                <span class="sync-label">Sinkronisasi simulasi aktif</span>
               </div>
               <button class="btn-cancel" style="width:auto;padding:9px 16px;display:flex;align-items:center;gap:7px;"
                 id="btn-sync-all">
-                <i class="ti ti-refresh" id="sync-icon"></i><span>Sync Semua</span>
+                <i class="ti ti-refresh" id="sync-icon"></i><span>Perbarui Simulasi</span>
               </button>
             </div>
           </div>
@@ -4416,7 +4420,7 @@
                 <div style="font-size:26px;font-weight:700;margin:9px 0;" id="acc-total">Rp 0</div>
                 <div
                   style="display:flex;align-items:center;gap:5px;font-family:'Geist',sans-serif;font-size:12px;font-weight:700;color:var(--success);">
-                  <i class="ti ti-trending-up" style="font-size:13px;"></i>+2.4% bulan ini
+                  <i class="ti ti-info-circle" style="font-size:13px;"></i>Saldo akun tercatat
                 </div>
               </div>
               <div>
@@ -4447,11 +4451,14 @@
             </div>
             <div class="acc-list-card">
               <div class="acc-list-header">
-                <span>Institusi Terhubung</span>
+                <span>Akun Tersimpan</span>
                 <span style="color:var(--primary);font-size:13px;cursor:pointer;"
-                  onclick="showToast('Kelola koneksi belum tersedia','ti-info-circle')">Kelola Koneksi</span>
+                  onclick="showToast('Kelola akun belum tersedia pada prototype','ti-info-circle')">Kelola Akun</span>
               </div>
               <div id="acc-rows"></div>
+            </div>
+            <div style="grid-column:1 / -1;color:var(--text-faint);font-size:12px;line-height:1.5;">
+              Data akun pada prototype menggunakan sinkronisasi simulasi untuk kebutuhan demo.
             </div>
           </div>
         </div>
@@ -4476,8 +4483,9 @@
                 </div>
               </div>
               <div class="report-stat-value" id="report-spent">Rp 0</div>
-                <div class="report-stat-foot"><span class="vs-tag vs-up"><i class="ti ti-receipt"
-                  style="font-size:10px;"></i>Aktual</span><span id="report-spent-note" style="color:var(--text-muted);">Total pengeluaran tercatat</span>
+              <div class="report-stat-foot"><span class="vs-tag vs-up"><i class="ti ti-receipt"
+                    style="font-size:10px;"></i>Aktual</span><span id="report-spent-note"
+                  style="color:var(--text-muted);">Total pengeluaran tercatat</span>
               </div>
             </div>
             <div class="report-stat">
@@ -4487,8 +4495,9 @@
                 </div>
               </div>
               <div class="report-stat-value" id="report-income" style="color:var(--success);">Rp 0</div>
-                <div class="report-stat-foot"><span class="vs-tag vs-down"><i class="ti ti-wallet"
-                  style="font-size:10px;"></i>Aktual</span><span id="report-income-note" style="color:var(--text-muted);">Total pemasukan tercatat</span>
+              <div class="report-stat-foot"><span class="vs-tag vs-down"><i class="ti ti-wallet"
+                    style="font-size:10px;"></i>Aktual</span><span id="report-income-note"
+                  style="color:var(--text-muted);">Total pemasukan tercatat</span>
               </div>
             </div>
             <div class="report-stat primary-bg">
@@ -4519,12 +4528,14 @@
               <div id="report-insights-list"></div>
               <button
                 style="width:100%;padding:11px;border-radius:10px;border:1.5px solid var(--border);margin-top:14px;font-family:'Geist',sans-serif;font-size:13px;font-weight:700;color:var(--primary);background:transparent;cursor:pointer;"
-                onclick="showToast('Ringkasan ini sudah menampilkan insight utama periode aktif.','ti-list-check')">Lihat Ringkasan</button>
+                onclick="showToast('Ringkasan ini sudah menampilkan insight utama periode aktif.','ti-list-check')">Lihat
+                Ringkasan</button>
             </div>
           </div>
           <div class="card" style="margin-top:20px;">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
-              <div class="panel-title" style="margin-bottom:0;">Laporan Sebelumnya <span style="font-size:11px;color:var(--text-faint);font-weight:500;">(data historis demo)</span></div>
+              <div class="panel-title" style="margin-bottom:0;">Laporan Sebelumnya <span
+                  style="font-size:11px;color:var(--text-faint);font-weight:500;">(data historis demo)</span></div>
               <span
                 style="color:var(--primary);font-family:'Geist',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">Lihat
                 Semua</span>

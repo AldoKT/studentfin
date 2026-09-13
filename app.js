@@ -1075,11 +1075,11 @@ function showToast(text, icon = "ti-circle-check") {
    STATIC DATA — other pages
 ============================================================ */
 const ACCOUNTS_DATA = [
-  { id: "bca", name: "Bank Central Asia (BCA)", type: "Rekening •••• 4589", letter: "BCA", bg: "#003d79", balance: 8500000, sync: "Sync 2j lalu", syncOk: true },
-  { id: "mandiri", name: "Bank Mandiri", type: "Tabungan •••• 1204", letter: "MDR", bg: "#003366", balance: 3500000, sync: "Sync 5j lalu", syncOk: true },
-  { id: "gopay", name: "GoPay", type: "E-Wallet", letter: "GP", bg: "#00880e", balance: 2800000, sync: "Sync gagal", syncOk: false },
-  { id: "ovo", name: "OVO", type: "E-Wallet", letter: "OVO", bg: "#4c3494", balance: 1800000, sync: "Sync 1h lalu", syncOk: true },
-  { id: "cash", name: "Dompet Tunai", type: "Akun Manual", letter: "IDR", bg: "#5F5E5A", balance: 1850000, sync: "Diperbarui manual", syncOk: true },
+  { id: "bca", name: "Bank Central Asia (BCA)", type: "Rekening •••• 4589", letter: "BCA", bg: "#003d79", balance: 8500000, sync: "Simulasi · 2j lalu", syncOk: true },
+  { id: "mandiri", name: "Bank Mandiri", type: "Tabungan •••• 1204", letter: "MDR", bg: "#003366", balance: 3500000, sync: "Simulasi · 5j lalu", syncOk: true },
+  { id: "gopay", name: "GoPay", type: "E-Wallet", letter: "GP", bg: "#00880e", balance: 2800000, sync: "Simulasi gagal", syncOk: false },
+  { id: "ovo", name: "OVO", type: "E-Wallet", letter: "OVO", bg: "#4c3494", balance: 1800000, sync: "Simulasi · 1j lalu", syncOk: true },
+  { id: "cash", name: "Dompet Tunai", type: "Akun Manual", letter: "IDR", bg: "#5F5E5A", balance: 1850000, sync: "Manual · tersimpan", syncOk: true },
 ];
 
 const SAVINGS_GOALS = [
@@ -1610,7 +1610,7 @@ function performSync(silent) {
   if (!silent) {
     const tx = state.transactions[state.transactions.length - 1];
     const label = tx.type === "income" ? "+" + rupiah(tx.amount) : rupiah(tx.amount);
-    showToast(`Sync selesai — "${tx.desc}" (${label})`, "ti-cloud-check");
+    showToast(`Sinkronisasi simulasi selesai — "${tx.desc}" (${label})`, "ti-cloud-check");
   }
 }
 
@@ -1618,15 +1618,15 @@ function updateAllSyncTimestamps() {
   const elapsed = Math.round((Date.now() - lastSyncTime) / 1000);
   ACCOUNTS_DATA.forEach(a => {
     if (a.id === "cash") {
-      a.sync = "Diperbarui otomatis";
+      a.sync = "Manual · tersimpan";
     } else if (elapsed < 5) {
-      a.sync = "Baru saja";
+      a.sync = "Simulasi · baru saja";
     } else if (elapsed < 60) {
-      a.sync = elapsed + " detik lalu";
+      a.sync = "Simulasi · " + elapsed + " detik lalu";
     } else if (elapsed < 3600) {
-      a.sync = Math.floor(elapsed / 60) + " menit lalu";
+      a.sync = "Simulasi · " + Math.floor(elapsed / 60) + " menit lalu";
     } else {
-      a.sync = Math.floor(elapsed / 3600) + " jam lalu";
+      a.sync = "Simulasi · " + Math.floor(elapsed / 3600) + " jam lalu";
     }
   });
 }
