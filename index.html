@@ -1978,14 +1978,14 @@
       text-align: right;
     }
 
-    .ai-insight-card {
+    .report-insight-card {
       background: var(--primary-light);
       border: 1px solid var(--indigo-soft);
       border-radius: 16px;
       padding: 18px;
     }
 
-    .ai-insight-item {
+    .report-insight-item {
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: var(--radius-md);
@@ -1995,11 +1995,11 @@
       margin-bottom: 10px;
     }
 
-    .ai-insight-item:last-child {
+    .report-insight-item:last-child {
       margin-bottom: 0;
     }
 
-    .ai-accent {
+    .report-insight-accent {
       position: absolute;
       left: 0;
       top: 0;
@@ -4461,10 +4461,10 @@
           <div class="page-header" style="border-bottom:1px solid var(--border);padding-bottom:22px;">
             <div>
               <h1 id="report-title">Ringkasan Bulan Ini</h1>
-              <div class="sub">Laporan performa keuangan bulanan.</div>
+              <div class="sub" id="report-period-note">Berdasarkan transaksi yang tercatat pada prototype.</div>
             </div>
             <button class="btn-primary" style="width:auto;padding:11px 18px;"
-              onclick="showToast('Export PDF belum tersedia','ti-info-circle')">
+              onclick="showToast('Ekspor PDF belum tersedia pada prototype.','ti-info-circle')">
               <i class="ti ti-download"></i>Download PDF
             </button>
           </div>
@@ -4476,8 +4476,8 @@
                 </div>
               </div>
               <div class="report-stat-value" id="report-spent">Rp 0</div>
-              <div class="report-stat-foot"><span class="vs-tag vs-up"><i class="ti ti-trending-up"
-                    style="font-size:10px;"></i>+12%</span><span style="color:var(--text-muted);">vs bulan lalu</span>
+                <div class="report-stat-foot"><span class="vs-tag vs-up"><i class="ti ti-receipt"
+                  style="font-size:10px;"></i>Aktual</span><span id="report-spent-note" style="color:var(--text-muted);">Total pengeluaran tercatat</span>
               </div>
             </div>
             <div class="report-stat">
@@ -4487,21 +4487,21 @@
                 </div>
               </div>
               <div class="report-stat-value" id="report-income" style="color:var(--success);">Rp 0</div>
-              <div class="report-stat-foot"><span class="vs-tag vs-down"><i class="ti ti-trending-up"
-                    style="font-size:10px;"></i>+5%</span><span style="color:var(--text-muted);">vs bulan lalu</span>
+                <div class="report-stat-foot"><span class="vs-tag vs-down"><i class="ti ti-wallet"
+                  style="font-size:10px;"></i>Aktual</span><span id="report-income-note" style="color:var(--text-muted);">Total pemasukan tercatat</span>
               </div>
             </div>
             <div class="report-stat primary-bg">
-              <div class="report-stat-label">PERFORMA TABUNGAN</div>
-              <div class="report-stat-value">On Track</div>
-              <div style="font-size:12.5px;color:#DAD7FF;margin-top:3px;">Laptop Fund</div>
+              <div class="report-stat-label">ARUS KAS BERSIH</div>
+              <div class="report-stat-value" id="report-net">Rp 0</div>
+              <div style="font-size:12.5px;color:#DAD7FF;margin-top:3px;">Pemasukan dikurangi pengeluaran</div>
               <div style="margin-top:12px;">
                 <div
                   style="display:flex;justify-content:space-between;font-size:12.5px;color:#DAD7FF;margin-bottom:5px;">
-                  <span>Progress</span><span>69%</span>
+                  <span>Periode aktif</span><span id="report-active-period">-</span>
                 </div>
                 <div style="height:7px;background:rgba(15,0,105,0.4);border-radius:9999px;overflow:hidden;">
-                  <div style="height:100%;width:69%;background:#6FFBBE;border-radius:9999px;"></div>
+                  <div style="height:100%;width:100%;background:#6FFBBE;border-radius:9999px;"></div>
                 </div>
               </div>
             </div>
@@ -4511,20 +4511,20 @@
               <div class="panel-title">Ringkasan Pengeluaran</div>
               <div id="report-cat-list"></div>
             </div>
-            <div class="ai-insight-card">
+            <div class="report-insight-card">
               <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
-                <i class="ti ti-sparkles" style="font-size:20px;color:#FFB95F;"></i>
-                <div style="font-size:17px;font-weight:700;">AI Insights</div>
+                <i class="ti ti-chart-dots-3" style="font-size:20px;color:var(--primary);"></i>
+                <div style="font-size:17px;font-weight:700;">Insight Keuangan</div>
               </div>
-              <div id="ai-insights-list"></div>
+              <div id="report-insights-list"></div>
               <button
                 style="width:100%;padding:11px;border-radius:10px;border:1.5px solid var(--border);margin-top:14px;font-family:'Geist',sans-serif;font-size:13px;font-weight:700;color:var(--primary);background:transparent;cursor:pointer;"
-                onclick="showToast('Lihat semua rekomendasi','ti-list-check')">Lihat Semua Rekomendasi</button>
+                onclick="showToast('Ringkasan ini sudah menampilkan insight utama periode aktif.','ti-list-check')">Lihat Ringkasan</button>
             </div>
           </div>
           <div class="card" style="margin-top:20px;">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
-              <div class="panel-title" style="margin-bottom:0;">Laporan Sebelumnya</div>
+              <div class="panel-title" style="margin-bottom:0;">Laporan Sebelumnya <span style="font-size:11px;color:var(--text-faint);font-weight:500;">(data historis demo)</span></div>
               <span
                 style="color:var(--primary);font-family:'Geist',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">Lihat
                 Semua</span>

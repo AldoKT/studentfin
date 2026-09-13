@@ -1090,11 +1090,6 @@ const SAVINGS_GOALS = [
 
 const SAVINGS_MONTHLY_PACE = 2500000;
 
-const AI_INSIGHTS = [
-  { title: "Pengeluaran Makan Tinggi", body: "Pengeluaranmu untuk makan naik 15% bulan ini. Pertimbangkan masak sendiri untuk hemat Rp 400rb/bulan.", accent: "var(--danger)" },
-  { title: "Hemat Transportasi", body: "Mantap memanfaatkan shuttle kampus! Biaya transportasi turun Rp 150rb dibanding bulan lalu.", accent: "var(--success)" },
-];
-
 const PREV_REPORTS = [
   { month: "Mei 2025", spent: 3850000, net: 1400000, positive: true },
   { month: "April 2025", spent: 4500000, net: -250000, positive: false },
@@ -1400,17 +1395,35 @@ function renderAccounts() {
 function renderReports() {
   const months = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"];
   const now = new Date();
-  document.getElementById("report-title").textContent = `Ringkasan ${months[now.getMonth()]} ${now.getFullYear()}`;
-  document.getElementById("report-spent").textContent = rupiah(getTotalSpent());
-  document.getElementById("report-income").textContent = rupiah(getTotalIncome());
+  const totalSpent = getTotalSpent();
+  const totalIncome = getTotalIncome();
+  const netFlow = totalIncome - totalSpent;
+  const spentByCategory = getSpentByCategory();
+  const rankedCategories = CATEGORIES
+    .map(c => ({ ...c, amount: spentByCategory[c.id] || 0 }))
+    .filter(c => c.amount > 0)
+    .sort((a, b) => b.amount - a.amount);
+  const largestCategory = rankedCategories[0];
 
-  const spent = getSpentByCategory();
-  const total = getTotalSpent() || 1;
-  const sorted = CATEGORIES.map(c => ({ ...c, amount: spent[c.id] || 0 })).filter(c => c.amount > 0).sort((a, b) => b.amount - a.amount).slice(0, 5);
+  document.getElementById("report-title").textContent = `Ringkasan ${months[now.getMonth()]} ${now.getFullYear()}`;
+  document.getElementById("report-period-note").textContent = "Berdasarkan transaksi yang tercatat pada prototype.";
+  document.getElementById("report-spent").textContent = rupiah(totalSpent);
+  document.getElementById("report-income").textContent = rupiah(totalIncome);
+  document.getElementById("report-net").textContent = rupiah(netFlow);
+  document.getElementById("report-active-period").textContent = `${months[now.getMonth()]} ${now.getFullYear()}`;
+  document.getElementById("report-spent-note").textContent = "Total pengeluaran tercatat";
+  document.getElementById("report-income-note").textContent = "Total pemasukan tercatat";
+
+  const total = totalSpent || 1;
+  const visibleCategories = rankedCategories.slice(0, 5);
+  const remainingAmount = rankedCategories.slice(5).reduce((sum, c) => sum + c.amount, 0);
+  if (remainingAmount > 0) visibleCategories.push({ name: "Lainnya", amount: remainingAmount, color: "#5F5E5A", bg: "#F1EFE8", icon: "ti-dots" });
   const catList = document.getElementById("report-cat-list");
   catList.innerHTML = "";
-  sorted.forEach(c => {
-    const pct = Math.round((c.amount / total) * 100);
+  let displayedPct = 0;
+  visibleCategories.forEach((c, index) => {
+    const pct = index === visibleCategories.length - 1 ? 100 - displayedPct : Math.round((c.amount / total) * 100);
+    displayedPct += pct;
     const row = document.createElement("div");
     row.className = "spending-summary-row";
     row.innerHTML = `
@@ -1425,18 +1438,22 @@ function renderReports() {
     catList.appendChild(row);
   });
 
-  const aiList = document.getElementById("ai-insights-list");
-  aiList.innerHTML = "";
-  AI_INSIGHTS.forEach(ins => {
+  const insightsList = document.getElementById("report-insights-list");
+  insightsList.innerHTML = "";
+  const insights = largestCategory ? [
+    { title: "Kategori utama pengeluaran", body: `${largestCategory.name} menyumbang ${Math.round((largestCategory.amount / total) * 100)}% dari total ${rupiah(totalSpent)} pengeluaran.`, accent: "var(--primary)" },
+    { title: "Arus kas periode ini", body: `${netFlow >= 0 ? "Pemasukan masih lebih besar" : "Pengeluaran lebih besar"} dengan selisih ${rupiah(Math.abs(netFlow))}.`, accent: netFlow >= 0 ? "var(--success)" : "var(--danger)" },
+  ] : [{ title: "Belum ada insight", body: "Tambahkan transaksi untuk melihat ringkasan keuangan yang relevan.", accent: "var(--primary)" }];
+  insights.forEach(ins => {
     const item = document.createElement("div");
-    item.className = "ai-insight-item";
+    item.className = "report-insight-item";
     item.innerHTML = `
-      <div class="ai-accent" style="background:${ins.accent};"></div>
+      <div class="report-insight-accent" style="background:${ins.accent};"></div>
       <div style="padding-left:12px;">
         <div style="font-family:'Geist',sans-serif;font-size:13.5px;font-weight:700;margin-bottom:3px;">${ins.title}</div>
         <div style="font-size:13px;color:var(--text-muted);line-height:1.55;">${ins.body}</div>
       </div>`;
-    aiList.appendChild(item);
+    insightsList.appendChild(item);
   });
 
   const tbody = document.getElementById("prev-reports-body");
@@ -1451,7 +1468,7 @@ function renderReports() {
           </div>
           <div>
             <div style="font-family:'Geist',sans-serif;font-size:13.5px;font-weight:600;">${r.month}</div>
-            <div style="font-size:11.5px;color:var(--text-faint);">Dibuat awal bulan</div>
+            <div style="font-size:11.5px;color:var(--text-faint);">Periode historis demo</div>
           </div>
         </div>
       </td>
@@ -1463,7 +1480,7 @@ function renderReports() {
         </div>
       </td>
       <td style="text-align:right;">
-        <button style="font-size:17px;color:var(--text-faint);" aria-label="Download laporan ${r.month}" onclick="showToast('Download PDF ${r.month}','ti-download')"><i class="ti ti-download"></i></button>
+        <button style="font-size:17px;color:var(--text-faint);" aria-label="Ekspor laporan ${r.month}" onclick="showToast('Ekspor PDF belum tersedia pada prototype.','ti-info-circle')"><i class="ti ti-download"></i></button>
       </td>`;
     tbody.appendChild(tr);
   });
